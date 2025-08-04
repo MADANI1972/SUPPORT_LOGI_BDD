@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  password      String
+  role          String   @default("technicien") // admin, superviseur, technicien
+  supervisorId  String?
+  supervisor    User?    @relation("SupervisorToUser", fields: [supervisorId], references: [id])
+  subordinates  User[]   @relation("SupervisorToUser")
+  interventions Intervention[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  nom           String
+  ville         String
+  contact       String
+  codeClient    String   @unique
+  interventions Intervention[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TypeIntervention {
+  id            String   @id @default(cuid())
+  nom           String
+  description   String?
+  interventions Intervention[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Intervention {
+  id            String   @id @default(cuid())
+  titre         String
+  description   String
+  statut        String   @default("en_attente") // en_attente, en_cours, terminee, annulee
+  priorite      String   @default("normale") // basse, normale, haute, urgente
+  dateDebut     DateTime?
+  dateFin       DateTime?
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id])
+  technicienId  String
+  technicien    User     @relation(fields: [technicienId], references: [id])
+  typeId        String
+  type          TypeIntervention @relation(fields: [typeId], references: [id])
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
