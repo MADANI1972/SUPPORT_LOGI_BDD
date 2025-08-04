@@ -64,37 +64,44 @@ export default function Home() {
     const demoInterventions: Intervention[] = [
       {
         id: '1',
+        titre: 'Maintenance système de facturation',
+        description: 'Problème sur le module de facturation',
         clientId: '1',
         typeId: '2',
         technicienId: '3',
-        status: 'en_cours',
+        statut: 'en_cours',
+        priorite: 'normale',
         dateDebut: '2024-01-15T09:00:00Z',
-        commentaire: 'Problème sur le module de facturation - Erreur lors de l\'impression des factures',
+        notes: 'Erreur lors de l\'impression des factures',
         createdAt: '2024-01-15T09:00:00Z',
         updatedAt: '2024-01-15T09:00:00Z'
       },
       {
         id: '2',
+        titre: 'Installation serveur BDD',
+        description: 'Installation nouveau serveur de base de données',
         clientId: '2',
         typeId: '1',
         technicienId: '4',
-        status: 'cloturee',
+        statut: 'terminee',
+        priorite: 'haute',
         dateDebut: '2024-01-14T14:30:00Z',
         dateFin: '2024-01-14T18:45:00Z',
-        commentaire: 'Installation nouveau serveur de base de données',
-        commentaireCloture: 'Installation terminée avec succès. Tests de performance validés.',
+        notes: 'Installation terminée avec succès. Tests de performance validés.',
         createdAt: '2024-01-14T14:30:00Z',
-        updatedAt: '2024-01-14T18:45:00Z',
-        duree: 255
+        updatedAt: '2024-01-14T18:45:00Z'
       },
       {
         id: '3',
+        titre: 'Dépannage système de prescription',
+        description: 'Système de prescription en panne',
         clientId: '3',
         typeId: '3',
         technicienId: '3',
-        status: 'urgente',
+        statut: 'en_attente',
+        priorite: 'urgente',
         dateDebut: '2024-01-15T11:15:00Z',
-        commentaire: 'Système de prescription en panne - Impossible de saisir les ordonnances',
+        notes: 'Impossible de saisir les ordonnances',
         createdAt: '2024-01-15T11:15:00Z',
         updatedAt: '2024-01-15T11:15:00Z'
       }
@@ -389,7 +396,7 @@ function Dashboard({
               onCloseIntervention={(id) => {
                 setInterventions(prev => prev.map(intervention => 
                   intervention.id === id 
-                    ? { ...intervention, status: 'cloturee', dateFin: new Date().toISOString(), updatedAt: new Date().toISOString() }
+                    ? { ...intervention, statut: 'terminee', dateFin: new Date().toISOString(), updatedAt: new Date().toISOString() }
                     : intervention
                 ));
               }}
@@ -450,9 +457,9 @@ function Dashboard({
                 intervention.id === id 
                   ? { 
                       ...intervention, 
-                      status: 'cloturee', 
+                      statut: 'terminee', 
                       dateFin: new Date().toISOString(), 
-                      commentaireCloture,
+                      notes: commentaireCloture,
                       updatedAt: new Date().toISOString() 
                     }
                   : intervention
@@ -479,9 +486,9 @@ function DashboardContent({ user, interventions, clients }: { user: any; interve
 
   const stats = {
     total: interventions.length,
-    enCours: interventions.filter(i => i.status === 'en_cours').length,
-    cloturees: interventions.filter(i => i.status === 'cloturee').length,
-    urgentes: interventions.filter(i => i.status === 'urgente').length
+    enCours: interventions.filter(i => i.statut === 'en_cours').length,
+    cloturees: interventions.filter(i => i.statut === 'terminee').length,
+    urgentes: interventions.filter(i => i.priorite === 'urgente').length
   };
 
   return (
@@ -586,10 +593,10 @@ function DashboardContent({ user, interventions, clients }: { user: any; interve
               const client = clients.find(c => c.id === intervention.clientId);
               
               let dureeText = '0h 0m';
-              if (currentTime) {
-                const duree = intervention.dateFin 
-                  ? new Date(intervention.dateFin).getTime() - new Date(intervention.dateDebut).getTime()
-                  : currentTime - new Date(intervention.dateDebut).getTime();
+              if (currentTime && intervention.dateDebut) {
+                const dateDebut = new Date(intervention.dateDebut).getTime();
+                const dateFin = intervention.dateFin ? new Date(intervention.dateFin).getTime() : currentTime;
+                const duree = dateFin - dateDebut;
                 const heures = Math.floor(duree / (1000 * 60 * 60));
                 const minutes = Math.floor((duree % (1000 * 60 * 60)) / (1000 * 60));
                 dureeText = `${heures}h ${minutes}m`;
@@ -603,16 +610,16 @@ function DashboardContent({ user, interventions, clients }: { user: any; interve
                   </div>
                   <div>
                     <p className="font-medium text-gray-800">{client?.nom || 'Client inconnu'}</p>
-                    <p className="text-sm text-gray-600">{intervention.commentaire.substring(0, 50)}...</p>
+                    <p className="text-sm text-gray-600">{intervention.notes?.substring(0, 50) || ''}...</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-600">{dureeText}</span>
                   <Badge 
-                    variant={intervention.status === 'cloturee' ? 'default' : 
-                            intervention.status === 'urgente' ? 'destructive' : 'secondary'}
+                    variant={intervention.statut === 'terminee' ? 'default' : 
+                            intervention.priorite === 'urgente' ? 'destructive' : 'secondary'}
                   >
-                    {intervention.status}
+                    {intervention.statut}
                   </Badge>
                 </div>
               </div>

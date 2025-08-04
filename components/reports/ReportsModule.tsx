@@ -53,6 +53,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
   const stats = useMemo(() => {
     let filteredInterventions = interventions.filter(intervention => {
       // Filtre par période globale
+      if (!intervention.dateDebut) return false;
       const interventionDate = new Date(intervention.dateDebut);
       const inGlobalDateRange = interventionDate >= globalDateRange.from && interventionDate <= globalDateRange.to;
       
@@ -60,11 +61,11 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
       let passesAdvancedFilters = true;
       
       // Filtre par date de début d'intervention
-      if (advancedFilters.dateDebutFrom) {
+      if (advancedFilters.dateDebutFrom && intervention.dateDebut) {
         const debutDate = new Date(intervention.dateDebut);
         if (debutDate < advancedFilters.dateDebutFrom) passesAdvancedFilters = false;
       }
-      if (advancedFilters.dateDebutTo) {
+      if (advancedFilters.dateDebutTo && intervention.dateDebut) {
         const debutDate = new Date(intervention.dateDebut);
         if (debutDate > advancedFilters.dateDebutTo) passesAdvancedFilters = false;
       }
@@ -88,7 +89,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
       
       // Filtre par degré d'urgence
       if (advancedFilters.urgencyLevels.length > 0) {
-        if (!advancedFilters.urgencyLevels.includes(intervention.status)) {
+        if (!advancedFilters.urgencyLevels.includes(intervention.priorite)) {
           passesAdvancedFilters = false;
         }
       }
@@ -100,15 +101,16 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
     });
 
     const total = filteredInterventions.length;
-    const cloturees = filteredInterventions.filter(i => i.status === 'cloturee').length;
-    const enCours = filteredInterventions.filter(i => i.status === 'en_cours').length;
-    const urgentes = filteredInterventions.filter(i => i.status === 'urgente').length;
+    const cloturees = filteredInterventions.filter(i => i.statut === 'terminee').length;
+    const enCours = filteredInterventions.filter(i => i.statut === 'en_cours').length;
+    const urgentes = filteredInterventions.filter(i => i.priorite === 'urgente').length;
 
     // Calcul du temps moyen
-    const interventionsCloturees = filteredInterventions.filter(i => i.status === 'cloturee' && i.dateFin);
+    const interventionsCloturees = filteredInterventions.filter(i => i.statut === 'terminee' && i.dateFin);
     const tempsMoyen = interventionsCloturees.length > 0 
       ? interventionsCloturees.reduce((acc, intervention) => {
-          const duree = new Date(intervention.dateFin!).getTime() - new Date(intervention.dateDebut).getTime();
+          if (!intervention.dateDebut || !intervention.dateFin) return acc;
+          const duree = new Date(intervention.dateFin).getTime() - new Date(intervention.dateDebut).getTime();
           return acc + duree;
         }, 0) / interventionsCloturees.length
       : 0;
@@ -125,7 +127,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
       .filter(u => u.role === 'technicien')
       .map(technicien => {
         const interventionsTechnicien = filteredInterventions.filter(i => i.technicienId === technicien.id);
-        const clotureesTechnicien = interventionsTechnicien.filter(i => i.status === 'cloturee');
+        const clotureesTechnicien = interventionsTechnicien.filter(i => i.statut === 'terminee');
         
         return {
           nom: technicien.name,
@@ -203,7 +205,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
   };
 
   const canCloseIntervention = (intervention: Intervention) => {
-    return intervention.status === 'en_cours' && 
+    return intervention.statut === 'en_cours' && 
            (currentUser.role === 'admin' || 
             (currentUser.role === 'technicien' && intervention.technicienId === currentUser.id) ||
             (currentUser.role === 'superviseur'));
@@ -619,16 +621,17 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                 {interventions
                   .filter(intervention => {
                     // Appliquer les mêmes filtres que pour les stats
+                    if (!intervention.dateDebut) return false;
                     const interventionDate = new Date(intervention.dateDebut);
                     const inGlobalDateRange = interventionDate >= globalDateRange.from && interventionDate <= globalDateRange.to;
                     
                     let passesAdvancedFilters = true;
                     
-                    if (advancedFilters.dateDebutFrom) {
+                    if (advancedFilters.dateDebutFrom && intervention.dateDebut) {
                       const debutDate = new Date(intervention.dateDebut);
                       if (debutDate < advancedFilters.dateDebutFrom) passesAdvancedFilters = false;
                     }
-                    if (advancedFilters.dateDebutTo) {
+                    if (advancedFilters.dateDebutTo && intervention.dateDebut) {
                       const debutDate = new Date(intervention.dateDebut);
                       if (debutDate > advancedFilters.dateDebutTo) passesAdvancedFilters = false;
                     }
@@ -640,7 +643,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                     }
                     
                     if (advancedFilters.urgencyLevels.length > 0) {
-                      if (!advancedFilters.urgencyLevels.includes(intervention.status)) {
+                      if (!advancedFilters.urgencyLevels.includes(intervention.priorite)) {
                         passesAdvancedFilters = false;
                       }
                     }
@@ -648,7 +651,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                     const matchesTechnicien = selectedTechnicien === 'all' || intervention.technicienId === selectedTechnicien;
                     const matchesClient = selectedClient === 'all' || intervention.clientId === selectedClient;
                     
-                    return intervention.status === 'en_cours' && inGlobalDateRange && passesAdvancedFilters && matchesTechnicien && matchesClient;
+                    return intervention.statut === 'en_cours' && inGlobalDateRange && passesAdvancedFilters && matchesTechnicien && matchesClient;
                   })
                   .slice(0, 10) // Limiter à 10 interventions pour l'affichage
                   .map((intervention) => {
@@ -667,7 +670,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                             <p className="text-sm text-gray-600">{type?.nom || 'Type inconnu'}</p>
                             <p className="text-xs text-gray-500">
                               Technicien: {technicien?.name || 'Inconnu'} • 
-                              Début: {format(new Date(intervention.dateDebut), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                              Début: {intervention.dateDebut ? format(new Date(intervention.dateDebut), 'dd/MM/yyyy HH:mm', { locale: fr }) : 'Non défini'}
                             </p>
                           </div>
                         </div>
@@ -697,7 +700,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                                   <div className="p-4 bg-gray-50 rounded-lg">
                                     <p className="font-medium text-gray-800">{client?.nom}</p>
                                     <p className="text-sm text-gray-600">{type?.nom}</p>
-                                    <p className="text-sm text-gray-500 mt-2">{intervention.commentaire}</p>
+                                    <p className="text-sm text-gray-500 mt-2">{intervention.notes}</p>
                                   </div>
                                   <div className="space-y-2">
                                     <Label htmlFor="commentaire-cloture">Commentaire de clôture</Label>
@@ -737,7 +740,7 @@ export function ReportsModule({ interventions, clients, users, types, currentUse
                     );
                   })}
                 
-                {interventions.filter(i => i.status === 'en_cours').length === 0 && (
+                {interventions.filter(i => i.statut === 'en_cours').length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">Aucune intervention en cours</p>

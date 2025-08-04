@@ -82,7 +82,7 @@ export const userService = {
    * @param user - Données de l'utilisateur à créer
    * @returns L'utilisateur créé ou null en cas d'erreur
    */
-  async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User | null> {
+  async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'> & { password: string }): Promise<User | null> {
     try {
       // Créer l'utilisateur dans l'authentification Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({

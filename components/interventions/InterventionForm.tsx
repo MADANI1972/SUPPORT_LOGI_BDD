@@ -23,8 +23,11 @@ export function InterventionForm({ onSubmit, onCancel, clients, types, currentUs
   const [formData, setFormData] = useState({
     clientId: '',
     typeId: '',
-    commentaire: '',
-    priorite: 'normale'
+    titre: '',
+    description: '',
+    notes: '',
+    priorite: 'normale',
+    statut: 'en_attente'
   });
   
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
@@ -64,7 +67,7 @@ export function InterventionForm({ onSubmit, onCancel, clients, types, currentUs
   const applySuggestion = (suggestion: string) => {
     setFormData(prev => ({
       ...prev,
-      commentaire: prev.commentaire ? `${prev.commentaire}\n${suggestion}` : suggestion
+      notes: prev.notes ? `${prev.notes}\n${suggestion}` : suggestion
     }));
   };
 
@@ -74,7 +77,7 @@ export function InterventionForm({ onSubmit, onCancel, clients, types, currentUs
     const interventionData = {
       ...formData,
       technicienId: currentUser.id,
-      status: 'en_cours',
+      statut: 'en_cours',
       dateDebut: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -185,14 +188,36 @@ export function InterventionForm({ onSubmit, onCancel, clients, types, currentUs
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="commentaire">Description de l'intervention *</Label>
-            <Textarea
-              id="commentaire"
-              placeholder="Décrivez le problème ou la tâche à effectuer..."
-              value={formData.commentaire}
-              onChange={(e) => setFormData(prev => ({ ...prev, commentaire: e.target.value }))}
-              rows={4}
+            <Label htmlFor="titre">Titre de l'intervention *</Label>
+            <Input
+              id="titre"
+              placeholder="Titre court et descriptif..."
+              value={formData.titre}
+              onChange={(e) => setFormData(prev => ({ ...prev, titre: e.target.value }))}
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description de l'intervention *</Label>
+            <Textarea
+              id="description"
+              placeholder="Décrivez le problème ou la tâche à effectuer..."
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes additionnelles</Label>
+            <Textarea
+              id="notes"
+              placeholder="Informations complémentaires, contexte, historique..."
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              rows={2}
             />
           </div>
 

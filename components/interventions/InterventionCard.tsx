@@ -9,11 +9,12 @@ interface Intervention {
   id: string;
   client: string;
   type: string;
-  status: 'en_cours' | 'cloturee' | 'urgente';
+  statut: 'en_attente' | 'en_cours' | 'terminee' | 'annulee';
+  priorite: 'basse' | 'normale' | 'haute' | 'urgente';
   technicien: string;
-  dateDebut: string;
+  dateDebut?: string;
   dateFin?: string;
-  commentaire: string;
+  notes?: string;
   ville?: string;
 }
 
@@ -24,21 +25,33 @@ interface InterventionCardProps {
 }
 
 export function InterventionCard({ intervention, canClose, onClose }: InterventionCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'cloturee': return 'default';
-      case 'urgente': return 'destructive';
+  const getStatusColor = (statut: string) => {
+    switch (statut) {
+      case 'terminee': return 'default';
       case 'en_cours': return 'secondary';
+      case 'en_attente': return 'outline';
+      case 'annulee': return 'destructive';
       default: return 'secondary';
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'cloturee': return 'Clôturée';
-      case 'urgente': return 'Urgente';
+  const getStatusLabel = (statut: string) => {
+    switch (statut) {
+      case 'terminee': return 'Terminée';
       case 'en_cours': return 'En cours';
-      default: return status;
+      case 'en_attente': return 'En attente';
+      case 'annulee': return 'Annulée';
+      default: return statut;
+    }
+  };
+
+  const getPriorityColor = (priorite: string) => {
+    switch (priorite) {
+      case 'urgente': return 'destructive';
+      case 'haute': return 'destructive';
+      case 'normale': return 'secondary';
+      case 'basse': return 'outline';
+      default: return 'secondary';
     }
   };
 
@@ -55,9 +68,14 @@ export function InterventionCard({ intervention, canClose, onClose }: Interventi
               <p className="text-sm text-gray-600">{intervention.type}</p>
             </div>
           </div>
-          <Badge variant={getStatusColor(intervention.status)}>
-            {getStatusLabel(intervention.status)}
-          </Badge>
+          <div className="flex space-x-2">
+            <Badge variant={getStatusColor(intervention.statut)}>
+              {getStatusLabel(intervention.statut)}
+            </Badge>
+            {intervention.priorite === 'urgente' && (
+              <Badge variant="destructive">Urgente</Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       
@@ -94,14 +112,14 @@ export function InterventionCard({ intervention, canClose, onClose }: Interventi
           </div>
           
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Commentaire:</p>
+            <p className="text-sm font-medium text-gray-700">Notes:</p>
             <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-              {intervention.commentaire}
+              {intervention.notes || 'Aucune note'}
             </p>
           </div>
         </div>
         
-        {canClose && intervention.status === 'en_cours' && (
+        {canClose && intervention.statut === 'en_cours' && (
           <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose} size="sm">
               Clôturer l'intervention

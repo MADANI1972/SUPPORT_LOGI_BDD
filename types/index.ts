@@ -4,6 +4,7 @@ export interface User {
   name: string;
   role: 'admin' | 'superviseur' | 'technicien';
   supervisorId?: string;
+  password?: string; // Ajout du champ password optionnel pour la création d'utilisateur
 }
 
 export interface Client {

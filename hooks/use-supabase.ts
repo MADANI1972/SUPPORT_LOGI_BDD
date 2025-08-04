@@ -49,7 +49,7 @@ export function useSupabase() {
     getAll: () => handleAsync(() => userService.getAllUsers()),
     getTechnicians: () => handleAsync(() => userService.getAllTechnicians()),
     getById: (id: string) => handleAsync(() => userService.getUserById(id)),
-    create: (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>) => 
+    create: (userData: Omit<User, 'id' | 'created_at' | 'updated_at'> & { password: string }) => 
       handleAsync(() => userService.createUser(userData)),
     update: (id: string, userData: Partial<User>) => 
       handleAsync(() => userService.updateUser(id, userData)),

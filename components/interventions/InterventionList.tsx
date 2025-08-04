@@ -60,10 +60,11 @@ export function InterventionList({
       
       const matchesSearch = !searchTerm || 
         client?.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        intervention.commentaire.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (intervention.notes ? intervention.notes.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
+        (intervention.description ? intervention.description.toLowerCase().includes(searchTerm.toLowerCase()) : false) ||
         type?.nom.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || intervention.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || intervention.statut === statusFilter;
       const matchesType = typeFilter === 'all' || intervention.typeId === typeFilter;
       const matchesClient = clientFilter === 'all' || intervention.clientId === clientFilter;
 
@@ -73,13 +74,15 @@ export function InterventionList({
     // Tri intelligent avec priorité IA
     filtered.sort((a, b) => {
       // Priorité aux interventions urgentes
-      if (a.status === 'urgente' && b.status !== 'urgente') return -1;
-      if (b.status === 'urgente' && a.status !== 'urgente') return 1;
+      if (a.priorite === 'urgente' && b.priorite !== 'urgente') return -1;
+      if (b.priorite === 'urgente' && a.priorite !== 'urgente') return 1;
 
       switch (sortBy) {
         case 'date_desc':
+          if (!a.dateDebut || !b.dateDebut) return 0;
           return new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime();
         case 'date_asc':
+          if (!a.dateDebut || !b.dateDebut) return 0;
           return new Date(a.dateDebut).getTime() - new Date(b.dateDebut).getTime();
         case 'client':
           const clientA = clients.find(c => c.id === a.clientId)?.nom || '';
@@ -87,6 +90,10 @@ export function InterventionList({
           return clientA.localeCompare(clientB);
         case 'duree':
           if (currentTime) {
+            if (!a.dateDebut && !b.dateDebut) return 0;
+            if (!a.dateDebut) return 1; // b vient en premier
+            if (!b.dateDebut) return -1; // a vient en premier
+            
             const dureeA = a.dateFin ? 
               new Date(a.dateFin).getTime() - new Date(a.dateDebut).getTime() : 
               currentTime - new Date(a.dateDebut).getTime();
@@ -106,9 +113,9 @@ export function InterventionList({
 
   const stats = useMemo(() => {
     const total = filteredAndSortedInterventions.length;
-    const enCours = filteredAndSortedInterventions.filter(i => i.status === 'en_cours').length;
-    const urgentes = filteredAndSortedInterventions.filter(i => i.status === 'urgente').length;
-    const cloturees = filteredAndSortedInterventions.filter(i => i.status === 'cloturee').length;
+    const enCours = filteredAndSortedInterventions.filter(i => i.statut === 'en_cours').length;
+    const urgentes = filteredAndSortedInterventions.filter(i => i.priorite === 'urgente').length;
+    const cloturees = filteredAndSortedInterventions.filter(i => i.statut === 'terminee').length;
     
     return { total, enCours, urgentes, cloturees };
   }, [filteredAndSortedInterventions]);

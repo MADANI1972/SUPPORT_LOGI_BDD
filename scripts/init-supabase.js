@@ -238,7 +238,7 @@ async function initializeDatabase() {
         {
           titre: 'Installation initiale',
           description: 'Installation du logiciel de gestion de pharmacie',
-          statut: 'terminé',
+          statut: 'terminee',
           priorite: 'haute',
           date_debut: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // Il y a une semaine
           date_fin: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // Il y a 6 jours
@@ -251,7 +251,7 @@ async function initializeDatabase() {
           titre: 'Formation utilisateurs',
           description: 'Formation des pharmaciens à l\'utilisation du logiciel',
           statut: 'en_cours',
-          priorite: 'moyenne',
+          priorite: 'normale',
           date_debut: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // Il y a 2 jours
           date_fin: null,
           client_id: createdClients[1].id,
@@ -262,7 +262,7 @@ async function initializeDatabase() {
         {
           titre: 'Problème de connexion',
           description: 'Le client ne peut pas se connecter au serveur',
-          statut: 'nouveau',
+          statut: 'en_attente',
           priorite: 'urgente',
           date_debut: new Date().toISOString(),
           date_fin: null,
