@@ -192,4 +192,4 @@ Ce projet est sous licence propriétaire. Tous droits réservés.
 
 ## Contact
 
-Pour toute question ou assistance, veuillez contacter l'équipe de développement à support@logipharm.com.
+Pour toute question ou assistance, veuillez contacter l'équipe de développement à support@logipharm.com.# SUPPORT_LOGI_BDD
